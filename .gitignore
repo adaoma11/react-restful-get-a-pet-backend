@@ -1,1 +1,8 @@
+# Images
+*.jpg
+*.png
+*.JPG
+*.PNG
+
+# Node Modules
 node_modules/

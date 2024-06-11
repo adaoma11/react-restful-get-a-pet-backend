@@ -12,7 +12,7 @@ const createUserToken = async (user, req, res) => {
 
     // return token
     res.status(200).json({
-        message: `Usuário ${user.name} autenticado com sucesso`,
+        message: `${user.name} successfully authenticated`,
         token: token,
         userId: user._id,
     });

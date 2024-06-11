@@ -91,4 +91,15 @@ module.exports = class PetController {
 
         res.status(200).json({ pets });
     }
+
+    static async getAllUserAdoptions(req, res) {
+        const token = getToken(req);
+        const user = await getUserByToken(token);
+
+        const pets = await Pet.find({ "adopter._id": user._id }).sort(
+            "-createdAt"
+        );
+
+        res.status(200).json({ pets });
+    }
 };

@@ -75,4 +75,9 @@ module.exports = class PetController {
 
         res.status(200).json({ message: "ok" });
     }
+
+    static async getAll(req, res) {
+        const pets = await Pet.find().sort("-createdAt");
+        res.status(200).json({ pets });
+    }
 };

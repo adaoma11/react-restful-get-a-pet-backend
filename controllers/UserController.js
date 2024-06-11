@@ -120,7 +120,7 @@ module.exports = class UserController {
 
         // check if the user exists in database
         if (!user) {
-            res.status(422).json({ message: "user not found in database" });
+            res.status(404).json({ message: "user not found in database" });
             return;
         }
 

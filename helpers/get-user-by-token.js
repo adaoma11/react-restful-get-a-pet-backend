@@ -6,8 +6,13 @@ const getUserByToken = async (token) => {
     if (!token) {
         return res.status(401).json({ message: "unauthorized" });
     }
-    const decoded = jwt.verify(token, "nossoSecret");
-    return await User.findOne({ _id: decoded.id });
+
+    try {
+        const verified = jwt.verify(token, "nossoSecret");
+        return await User.findOne({ _id: verified.id });
+    } catch (err) {
+        return res.status(400).json({ message: "invalid token" });
+    }
 };
 
 module.exports = getUserByToken;

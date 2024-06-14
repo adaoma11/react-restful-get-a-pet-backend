@@ -121,4 +121,34 @@ module.exports = class PetController {
 
         res.status(200).json({ pet });
     }
+
+    static async removePetById(req, res) {
+        const id = req.params.id;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(422).json({ message: "invalid ID" });
+        }
+
+        // check if pet exists in the database
+        const pet = await Pet.findOne({ _id: id });
+
+        if (!pet) {
+            res.status(404).json({ message: "pet not found in database" });
+            return;
+        }
+
+        // check if pet belongs to the logged user
+        const token = getToken(req);
+        const user = await getUserByToken(token);
+
+        if (pet.user._id.toString() !== user._id.toString()) {
+            return res.status(400).json({ message: "bad request" });
+        }
+
+        await Pet.findByIdAndDelete(pet._id);
+
+        res.status(200).json({
+            message: `pet ${pet.name} successfully removed`,
+        });
+    }
 };

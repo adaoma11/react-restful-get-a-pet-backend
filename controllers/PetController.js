@@ -239,4 +239,103 @@ module.exports = class PetController {
             return res.status(500).json({ message: err });
         }
     }
+
+    static async scheduleAdoption(req, res) {
+        const id = req.params.id;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(422).json({ message: "invalid ID" });
+        }
+
+        // check if pet exists in the database
+        const pet = await Pet.findOne({ _id: id });
+
+        if (!pet) {
+            res.status(404).json({ message: "pet not found in database" });
+            return;
+        }
+
+        if (!pet.available) {
+            return res
+                .status(422)
+                .json({ message: "pet is not available for adoption" });
+        }
+
+        // prevents the user from scheduling a visit with a pet he owns
+        const token = getToken(req);
+        const user = await getUserByToken(token);
+
+        if (pet.user._id.equals(user._id)) {
+            return res.status(400).json({
+                message:
+                    "you cannot schedule a visit with a pet that belongs to you",
+            });
+        }
+
+        // prevents the user from scheduling a visit if he has already done so
+        if (pet.adopter) {
+            if (pet.adopter._id.equals(user._id)) {
+                return res.status(400).json({
+                    message: "you have already scheduled a visit with this pet",
+                });
+            }
+        }
+
+        // add user as adopter
+        pet.adopter = {
+            _id: user._id,
+            name: user.name,
+            image: user.image,
+        };
+
+        try {
+            await Pet.findByIdAndUpdate(id, pet);
+            return res.status(200).json({
+                message: `Visit successfuly scheduled. Contact ${pet.user.name} on the number ${pet.user.phone}`,
+            });
+        } catch (err) {
+            return res.status(500).json({ message: err });
+        }
+    }
+
+    static async completeAdoption(req, res) {
+        const id = req.params.id;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(422).json({ message: "invalid ID" });
+        }
+
+        // check if pet exists in the database
+        const pet = await Pet.findOne({ _id: id });
+
+        if (!pet) {
+            res.status(404).json({ message: "pet not found in database" });
+            return;
+        }
+
+        if (!pet.available) {
+            return res
+                .status(422)
+                .json({ message: "pet is not available for adoption" });
+        }
+
+        // check if pet belongs to the logged user
+        const token = getToken(req);
+        const user = await getUserByToken(token);
+
+        if (pet.user._id.toString() !== user._id.toString()) {
+            return res.status(400).json({ message: "bad request" });
+        }
+
+        pet.available = false;
+
+        try {
+            await Pet.findByIdAndUpdate(id, pet);
+            return res.status(200).json({
+                message: `${pet.name} was successfuly adopted by ${user.name}`,
+            });
+        } catch (err) {
+            return res.status(500).json({ message: err });
+        }
+    }
 };

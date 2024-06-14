@@ -10,10 +10,7 @@ module.exports = class PetController {
     static async create(req, res) {
         const { name, age, specie, gender, weight, color } = req.body;
         const images = req.files;
-
         const available = true;
-
-        // images upload
 
         // validations
         if (!name) {
@@ -60,6 +57,7 @@ module.exports = class PetController {
             },
         });
 
+        // images upload
         images.map((image) => {
             pet.images.push(image.filename);
         });
@@ -73,8 +71,6 @@ module.exports = class PetController {
         } catch (err) {
             return res.status(500).json({ message: err });
         }
-
-        res.status(200).json({ message: "ok" });
     }
 
     static async getAll(req, res) {
@@ -150,5 +146,97 @@ module.exports = class PetController {
         res.status(200).json({
             message: `pet ${pet.name} successfully removed`,
         });
+    }
+
+    static async updatePet(req, res) {
+        const id = req.params.id;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(422).json({ message: "invalid ID" });
+        }
+
+        const { name, age, specie, gender, weight, color, available } =
+            req.body;
+
+        const images = req.files;
+        const updatedData = {};
+
+        // check if pet exists in the database
+        const pet = await Pet.findOne({ _id: id });
+
+        if (!pet) {
+            res.status(404).json({ message: "pet not found in database" });
+            return;
+        }
+
+        // check if pet belongs to the logged user
+        const token = getToken(req);
+        const user = await getUserByToken(token);
+
+        if (pet.user._id.toString() !== user._id.toString()) {
+            return res.status(400).json({ message: "bad request" });
+        }
+
+        // validations
+        if (!name) {
+            return res.status(422).json({ message: "name is required" });
+        } else {
+            updatedData.name = name;
+        }
+
+        if (!age) {
+            return res.status(422).json({ message: "age is required" });
+        } else {
+            updatedData.age = age;
+        }
+
+        if (!specie) {
+            return res.status(422).json({ message: "specie is required" });
+        } else {
+            updatedData.specie = specie;
+        }
+
+        if (!gender) {
+            return res.status(422).json({ message: "gender is required" });
+        } else {
+            updatedData.gender = gender;
+        }
+
+        if (!weight) {
+            return res.status(422).json({ message: "weight is required" });
+        } else {
+            updatedData.weight = weight;
+        }
+
+        if (!color) {
+            return res.status(422).json({ message: "color is required" });
+        } else {
+            updatedData.color = color;
+        }
+
+        if (images.length < 1) {
+            return res.status(422).json({ message: "image is required" });
+        } else {
+            updatedData.images = [];
+            images.map((image) => {
+                updatedData.images.push(image.filename);
+            });
+        }
+
+        if (!available) {
+            res.status(422).json({ message: "available status is required" });
+            return;
+        } else {
+            updatedData.available = available;
+        }
+
+        try {
+            await Pet.findByIdAndUpdate(id, updatedData);
+            return res.status(200).json({
+                message: `pet ${pet.name} successfully updated`,
+            });
+        } catch (err) {
+            return res.status(500).json({ message: err });
+        }
     }
 };

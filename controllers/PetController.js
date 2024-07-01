@@ -283,7 +283,7 @@ module.exports = class PetController {
     try {
       await Pet.findByIdAndUpdate(id, pet);
       return res.status(200).json({
-        message: `Visit successfuly scheduled. Contact ${pet.user.name} on the number ${pet.user.phone}`,
+        message: `Visit successfuly scheduled.`,
       });
     } catch (err) {
       return res.status(500).json({ message: err });
@@ -324,7 +324,7 @@ module.exports = class PetController {
     try {
       await Pet.findByIdAndUpdate(id, pet);
       return res.status(200).json({
-        message: `${pet.name} was successfuly adopted by ${user.name}`,
+        message: `${pet.name} was successfully adopted by ${pet.adopter.name}`,
       });
     } catch (err) {
       return res.status(500).json({ message: err });
